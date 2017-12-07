@@ -76,6 +76,9 @@ def get_first_term(n, data, M):
 
 
 def feature(d, i, n):
+    """
+    This is never used, it's too slow
+    """
     # if d[1] == 1:
     #     print "aaaaa"
 
@@ -195,33 +198,72 @@ def read_data():
     return data
 
 
+def sort_by_PMI(data, n, k=100):
+    P_single = np.ones((n,))
+    P_single *= k
+    P_pair = np.zeros((n, n))
+
+    for i in xrange(n):
+        for d in data:
+            P_single[i] += i in d[0]
+    P_single /= len(data)
+    print 'counted'
+
+    for d in data:
+        dlist = list(d[0])
+        for i in xrange(len(dlist)):
+            for j in xrange(i + 1, len(dlist)):
+                P_pair[dlist[i]][dlist[j]] += 1
+    print 'paired'
+
+    PMI = []
+    for i in xrange(n):
+        for j in xrange(i + 1, n):
+            if P_pair[i][j] > 1:
+                PMI.append((P_pair[i][j] / (P_single[i] * P_single[j]), i, j))
+    print 'appended'
+
+    PMI = reversed(sorted(PMI))
+    print 'sorted'
+    P_single *= len(data)
+
+    with open('PMI_smothed_100.txt', 'w') as PMI_file:
+        for pair_val, i, j in PMI:
+            if pair_val > 0:
+                PMI_file.write("%d, %d, %f, %d, %d, %d\n" % (i, j, pair_val, P_pair[i][j], P_single[i], P_single[j]))
+            else:
+                print 'writed'
+                break
+
+
 def main(alpha, delta):
     data = read_data()
+    sort_by_PMI(data, WORDS)
 
     # theta = np.random.rand(WORDS * 2 + 1)
-    theta = np.load('theta_3.1.npy')
-
-    first_term = get_first_term(WORDS, data, SPAM + HAM)
-    print 'Got first_term ', str(first_term), sum(first_term)
-
-    while True:
-        Z = inference(theta, data, WORDS)
-        # print 'Inference Done, ', Z
-
-        second_term = get_second_term(theta, data, Z, WORDS)
-        # print 'Got second_term'
-
-        gredients = first_term - second_term
-
-        theta += alpha * gredients
-
-        loss = sum(map(abs, gredients))
-        print loss
-        if loss < delta:
-            np.save('theta_' + str(delta) + '.npy', theta)
-            delta /= 2.
-
-    return theta
+    # theta = np.load('theta_3.1.npy')
+    #
+    # first_term = get_first_term(WORDS, data, SPAM + HAM)
+    # print 'Got first_term ', str(first_term), sum(first_term)
+    #
+    # while True:
+    #     Z = inference(theta, data, WORDS)
+    #     # print 'Inference Done, ', Z
+    #
+    #     second_term = get_second_term(theta, data, Z, WORDS)
+    #     # print 'Got second_term'
+    #
+    #     gredients = first_term - second_term
+    #
+    #     theta += alpha * gredients
+    #
+    #     loss = sum(map(abs, gredients))
+    #     print loss
+    #     if loss < delta:
+    #         np.save('theta_' + str(delta) + '.npy', theta)
+    #         delta /= 2.
+    #
+    # return theta
 
 
 if __name__ == '__main__':
