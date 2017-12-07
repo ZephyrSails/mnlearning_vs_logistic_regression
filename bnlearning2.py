@@ -39,8 +39,9 @@ def inference(theta, data, n):
     return Z
 
 
-def get_first_term(n, data, M):
+def get_first_term(n, data, M, PMI_pairs):
     first_term = np.array([0.0 for _ in xrange(2 * n + 1)])
+    PMI_term = [[[[],[]],[[],[]]] for _ in xrange(len(PMI_pairs) * 6)]
 
     # for i in xrange(2 * n + 1):
     #     for d in data:
@@ -51,10 +52,25 @@ def get_first_term(n, data, M):
         if d[-1]:
             for index in d[0]:
                 first_term[index] += 1.
+
+            for i in xrange(len(PMI_pairs)):
+                a, b = PMI_pairs[i]
+
+                if a
+
+
         else:
             for index in d[0]:
                 first_term[n + index] += 1.
+
+        for i in xrange(len(PMI_pairs)):
+            if
+
+
         first_term[-1] += d[-1]
+
+    for i in xrange(len(PMI_pairs)):
+        PMI_term +=
 
     first_term /= M
 
@@ -234,51 +250,31 @@ def sort_by_PMI(data, n, k=100):
                 break
 
 
+def read_PMI_pairs():
+    PMI_pairs = []
+    with open('PMI_smothed_100.txt', 'r') as PMI_file:
+        for line in PMI_file.readlines():
+            PMI_pairs.append(tuple(line.split(',')[:2]))
+
+    return PMI_pairs
+
+
 def main(alpha, delta):
     data = read_data()
+    PMI_pairs = read_PMI_pairs()
     # sort_by_PMI(data, WORDS)
 
     theta = np.random.rand(WORDS * 2 + 1)
     theta = np.load('theta_3.1.npy')
 
-    first_term = get_first_term(WORDS, data, SPAM + HAM)
+    first_term = get_first_term(WORDS, data, SPAM + HAM, PMI_pairs)
     print 'Got first_term ', str(first_term), sum(first_term)
 
     while True:
-        Z = inference(theta, data, WORDS)
+        Z = inference(theta, data, WORDS, PMI_pairs)
         # print 'Inference Done, ', Z
 
-        second_term = get_second_term(theta, data, Z, WORDS)
-        # print 'Got second_term'
-
-        gredients = first_term - second_term
-
-        theta += alpha * gredients
-
-        loss = sum(map(abs, gredients))
-        print loss
-        if loss < delta:
-            np.save('theta_' + str(delta) + '.npy', theta)
-            delta /= 2.
-
-    return theta
-
-
-def main2(alpha, delta):
-    data = read_data()
-    # sort_by_PMI(data, WORDS)
-
-    theta = np.random.rand(WORDS * 2 + 1)
-    theta = np.load('theta_3.1.npy')
-
-    first_term = get_first_term(WORDS, data, SPAM + HAM)
-    print 'Got first_term ', str(first_term), sum(first_term)
-
-    while True:
-        Z = inference(theta, data, WORDS)
-        # print 'Inference Done, ', Z
-
-        second_term = get_second_term(theta, data, Z, WORDS)
+        second_term = get_second_term(theta, data, Z, WORDS, PMI_pairs)
         # print 'Got second_term'
 
         gredients = first_term - second_term
