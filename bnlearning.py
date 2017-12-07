@@ -9,8 +9,8 @@ Ham:    249
 """
 WORDS   = 9314
 DOC     = 305
-Spam    = 56
-Ham     = 249
+SPAM    = 56
+HAM     = 249
 
 
 def inference(theta, data, n):
@@ -41,7 +41,7 @@ def inference(theta, data, n):
 
 
 
-def get_first_term(n, data):
+def get_first_term(n, data, M):
     first_term = np.array([0.0 for _ in xrange(2 * n + 1)])
 
     # for i in xrange(2 * n + 1):
@@ -58,7 +58,7 @@ def get_first_term(n, data):
                 first_term[n + index] += 1.
         first_term[-1] += d[-1]
 
-    first_term /= n
+    first_term /= M
 
 
     # for i in xrange(n):
@@ -95,11 +95,11 @@ def feature(d, i, n):
 def get_second_term(theta, data, Z, n):
     second_term = np.array([0.0 for _ in xrange(2 * n + 1)])
 
-    temps = np.array([0.0 for _ in xrange(2 * n + 1)])
+    temps = np.array([0.0 for _ in xrange(n)])
 
     for index, d in enumerate(data):
         temp = 0.
-        temp1 = 0.
+        # temp1 = 0.
         # ans, ans1 = [], []
         # print Y
         if d[1]:
@@ -198,31 +198,31 @@ def read_data():
 def main(alpha, delta):
     data = read_data()
 
-    theta = np.random.rand(WORDS * 2 + 1)
-    first_term = get_first_term(WORDS, data)
+    # theta = np.random.rand(WORDS * 2 + 1)
+    theta = np.load('theta_3.1.npy')
+
+    first_term = get_first_term(WORDS, data, SPAM + HAM)
     print 'Got first_term ', str(first_term), sum(first_term)
 
     while True:
         Z = inference(theta, data, WORDS)
-        print 'Inference Done, ', Z
+        # print 'Inference Done, ', Z
 
         second_term = get_second_term(theta, data, Z, WORDS)
-        print 'Got second_term'
+        # print 'Got second_term'
 
         gredients = first_term - second_term
 
-        print first_term
-        print second_term
-        print gredients
-
         theta += alpha * gredients
 
-        print sum(map(abs, gredients))
-        if abs(sum(gredients)) < delta:
-            break
+        loss = sum(map(abs, gredients))
+        print loss
+        if loss < delta:
+            np.save('theta_' + str(delta) + '.npy', theta)
+            delta /= 2.
 
     return theta
 
 
 if __name__ == '__main__':
-    main(0.01, 0.1)
+    main(0.01, 3.06)
